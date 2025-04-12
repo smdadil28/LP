@@ -1,0 +1,103 @@
+import java.util.*;
+public class Main {
+	static String[] first, follow;
+	static String[][] grammar;
+	static List<String> nonTerminals = new ArrayList<>();
+	static Map<String, Map<Character, String>> table = new HashMap<>();
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		System.out.println("Enter the no of productions");
+		int n = sc.nextInt();
+		grammar = new String[n][2];
+		sc.nextLine();
+		System.out.println("Enter the productions (Use '@' for Epsilon)");
+		for (int i = 0; i < n; i++) {
+			String[] p = sc.nextLine().split("->");
+			nonTerminals.add(p[0].trim());
+			grammar[i] = new String[] {p[0].trim(), p[1]};
+			table.put(p[0].trim(), new HashMap<>());
+		}
+		first = new String[n];
+		follow = new String[n];
+		for (int i = 0; i < n; i++) first[i] = calculateFirst(i);
+		for (int i = 0; i < n; i++) follow[i] = calculateFollow(i);
+		for (int i = 0; i < n; i++) {
+			if (first[i].contains("@")) {
+				for (char c : follow[i].toCharArray())
+					table.get(grammar[i][0]).put(c, "@");
+			}
+		}
+		System.out.println("Enter the string to check");
+		System.out.println(check(sc.nextLine() + "$") ? "String is accepted" : "String is rejected");
+	}
+	static String calculateFirst(int i) {
+		String[] s = grammar[i][1].split("\\|");
+		StringBuilder temp = new StringBuilder();
+		for (String p : s) {
+			if (!nonTerminals.contains(p.charAt(0) + ""))
+				temp.append(p.charAt(0));
+			else {
+				String t = calculateFirst(nonTerminals.indexOf(p.charAt(0) + ""));
+				if (t.contains("@")) {
+					temp.append(!nonTerminals.contains(p.charAt(1) + "") ? p.charAt(1) :
+					            calculateFirst(nonTerminals.indexOf(p.charAt(1) + "")));
+				}
+				temp.append(t);
+			}
+			table.get(grammar[i][0]).put(temp.charAt(temp.length() - 1), p);
+		}
+		return temp.toString();
+	}
+	static String calculateFollow(int i) {
+		Set<Character> temp = new HashSet<>();
+		if (i == 0) temp.add('$');
+		for (String[] rule : grammar) {
+			if (rule[0].equals(nonTerminals.get(i))) continue;
+			for (String p : rule[1].split("\\|")) {
+				int x = p.indexOf(nonTerminals.get(i));
+				if (x != -1) {
+					if (x == p.length() - 1) temp.addAll(getFollow(rule[0]));
+					else {
+						String next = p.charAt(x + 1) + "";
+						if (!nonTerminals.contains(next)) temp.add(p.charAt(x + 1));
+						else {
+							temp.addAll(getFirst(next));
+							if (first[nonTerminals.indexOf(next)].contains("@"))
+								temp.addAll(getFollow(rule[0]));
+						}
+					}
+				}
+			}
+		}
+		return temp.toString();
+	}
+	static Set<Character> getFirst(String nt) {
+		Set<Character> set = new HashSet<>();
+		for (char c : first[nonTerminals.indexOf(nt)].toCharArray()) set.add(c);
+		return set;
+	}
+	static Set<Character> getFollow(String nt) {
+		Set<Character> set = new HashSet<>();
+		for (char c : follow[nonTerminals.indexOf(nt)].toCharArray()) set.add(c);
+		return set;
+	}
+	static boolean check(String s) {
+		Stack<Character> stk = new Stack<>();
+		stk.push('$');
+		stk.push(nonTerminals.get(0).charAt(0));
+		int i = 0;
+		while (i < s.length()) {
+			if (stk.isEmpty()) return false;
+			if (stk.peek() == s.charAt(i)) {
+				stk.pop();
+				i++;
+				continue;
+			}
+			String t = table.getOrDefault(stk.pop() + "", Collections.emptyMap()).get(s.charAt(i));
+			if (t == null) return false;
+			if (!t.equals("@"))
+				for (int j = t.length() - 1; j >= 0; j--) stk.push(t.charAt(j));
+		}
+		return stk.isEmpty();
+	}
+}
