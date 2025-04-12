@@ -1,0 +1,70 @@
+import java.util.Scanner;
+
+class Stack {
+    int top = -1, size;
+    int[] arr;
+
+    Stack(int size) {
+        this.size = size;
+        arr = new int[size];
+    }
+
+    void push(int val) {
+        if (top == size - 1)
+            System.out.println("Stack Overflow! Cannot push " + val);
+        else {
+            arr[++top] = val;
+            System.out.println("Pushed: " + val);
+        }
+    }
+
+    void pop() {
+        if (top == -1)
+            System.out.println("Stack Underflow! Nothing to pop.");
+        else
+            System.out.println("Popped: " + arr[top--]);
+    }
+
+    void display() {
+        if (top == -1)
+            System.out.println("Stack is empty.");
+        else {
+            System.out.println("Stack contents (top to bottom):");
+            for (int i = top; i >= 0; i--)
+                System.out.println(arr[i]);
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter stack size: ");
+        Stack s = new Stack(sc.nextInt());
+
+        while (true) {
+            System.out.println("\nMenu:");
+            System.out.println("1. Push\n2. Pop\n3. Display\n4. Exit");
+            System.out.print("Enter your choice: ");
+            int ch = sc.nextInt();
+
+            switch (ch) {
+                case 1:
+                    System.out.print("Enter value to push: ");
+                    s.push(sc.nextInt());
+                    break;
+                case 2:
+                    s.pop();
+                    break;
+                case 3:
+                    s.display();
+                    break;
+                case 4:
+                    System.out.println("Exiting...");
+                    return;
+                default:
+                    System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+}
