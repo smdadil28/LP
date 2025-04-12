@@ -1,0 +1,55 @@
+import java.util.*;
+public class Main {
+    static int count = 1;
+    static boolean isOp(char c) {
+        return "+-*/".indexOf(c) != -1;
+    }
+    static int prec(char c) {
+        return (c == '+' || c == '-') ? 1 : (c == '*' || c == '/') ? 2 : -1;
+    }
+    static String toPostfix(String exp) {
+        StringBuilder post = new StringBuilder();
+        Stack<Character> stack = new Stack<>();
+        for (char c : exp.toCharArray()) {
+            if (Character.isLetterOrDigit(c)) post.append(c);
+            else if (c == '(') stack.push(c);
+            else if (c == ')') while (!stack.isEmpty() && stack.pop() != '(')
+                post.append(stack.pop());
+            else {
+                while (!stack.isEmpty() && prec(c) <= prec(stack.peek()))
+                    post.append(stack.pop());
+                stack.push(c);
+            }
+        }
+        while (!stack.isEmpty()) post.append(stack.pop());
+        return post.toString();
+    }
+    static String genTAC(String post) {
+        Stack<String> stack = new Stack<>();
+        for (char c : post.toCharArray()) {
+            if (Character.isLetterOrDigit(c)) stack.push("" + c);
+            else {
+                String b = stack.pop(), a = stack.pop();
+                String t = "t" + count++;
+                System.out.println(t + " = " + a + " " + c + " " + b);
+                stack.push(t);
+            }
+        }
+        return stack.pop();
+    }
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter expression : ");
+        String input = sc.nextLine().replaceAll("\\s+", "");
+        String lhs = "", rhs = input;
+        if (input.contains("=")) {
+            String[] parts = input.split("=");
+            lhs = parts[0];
+            rhs = parts[1];
+        }
+        System.out.println("Three Address Code : ");
+        String postfix = toPostfix(rhs);
+        String result = genTAC(postfix);
+        if (!lhs.isEmpty()) System.out.println(lhs + " = " + result);
+    }
+}
